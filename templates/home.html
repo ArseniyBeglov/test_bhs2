@@ -1,0 +1,80 @@
+{% extends "base.html" %}  <!-- Предположим, что у вас есть базовый шаблон -->
+{% block title %}Home{% endblock %}
+{% block content %}
+<div class="container">
+  <h1 align="center">Assets</h1>
+  <ul class="list-group list-group-flush" id="assets">
+    {% for asset in assets %}
+    <li class="list-group-item">
+      {{asset.id,  asset.name,  asset.description, asset.price }}
+      <button type="button" class="close" onClick="deleteAsset({{ asset.id }})">
+        <span aria-hidden="true">&times;</span>
+      </button>
+    </li>
+    {% endfor %}
+  </ul>
+  <br>
+  <form method="POST" id="addAssetForm">
+    <div class="form-group">
+      <label for="name">Asset Name</label>
+      <input type="text" class="form-control" id="name" name="name" required>
+    </div>
+    <div class="form-group">
+      <label for="description">Description</label>
+      <textarea class="form-control" id="description" name="description" rows="3"></textarea>
+    </div>
+    <div class="form-group">
+      <label for="price">Price</label>
+      <input type="number" class="form-control" id="price" name="price" step="0.01" required>
+    </div>
+    <button type="submit" class="btn btn-primary">Add Asset</button>
+  </form>
+</div>
+
+<script>
+  // Функция для удаления ассета
+  function deleteAsset(assetId) {
+    // Отправить запрос на удаление ассета на сервер
+    fetch('/delete-asset', {
+      method: 'POST',
+      body: JSON.stringify({ assetId: assetId }),
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    }).then(response => {
+      if (response.ok) {
+        // Обновить интерфейс после успешного удаления
+        window.location.href = "/";
+      }
+    }).catch(error => {
+      console.error('Error deleting asset:', error);
+    });
+  }
+
+  // Обработчик формы для добавления ассета
+  document.getElementById('addAssetForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+
+    // Получите данные из формы и отправьте их на сервер
+    const name = document.getElementById('name').value;
+    const description = document.getElementById('description').value;
+    const price = document.getElementById('price').value;
+
+    fetch('/add-asset', {
+      method: 'POST',
+      body: JSON.stringify({ name: name, description: description, price: price }),
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    }).then(response => {
+      if (response.ok) {
+        // Обновить интерфейс после успешного добавления
+        location.reload();
+      }
+    }).catch(error => {
+      console.error('Error adding asset:', error);
+    });
+  });
+
+</script>
+{% endblock %}

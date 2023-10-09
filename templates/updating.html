@@ -1,0 +1,64 @@
+{% extends "base.html" %}  <!-- Предположим, что у вас есть базовый шаблон -->
+{% block title %}Updating{% endblock %}
+{% block content %}
+<div class="container">
+  <h1 align="center">Assets</h1>
+  <ul class="list-group list-group-flush" id="assets">
+    {% for asset in assets %}
+    <li class="list-group-item">
+      {{asset.id,  asset.name,  asset.description, asset.price }}
+    </li>
+    {% endfor %}
+  </ul>
+  <br>
+  <form method="POST" id="updateAssetForm">
+      <div class="form-group">
+      <label for="id">Asset id</label>
+      <input type="text" class="form-control" id="id" name="id" required>
+    </div>
+    <div class="form-group">
+      <label for="name">Asset Name</label>
+      <input type="text" class="form-control" id="name" name="name" required>
+    </div>
+    <div class="form-group">
+      <label for="description">Description</label>
+      <textarea class="form-control" id="description" name="description" rows="3"></textarea>
+    </div>
+    <div class="form-group">
+      <label for="price">Price</label>
+      <input type="number" class="form-control" id="price" name="price" step="0.01" required>
+    </div>
+    <button type="submit" class="btn btn-primary">update Asset</button>
+  </form>
+</div>
+
+<script>
+
+  document.getElementById('updateAssetForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+
+    // Получите данные из формы и отправьте их на сервер
+      const id = document.getElementById('id').value;
+    const name = document.getElementById('name').value;
+    const description = document.getElementById('description').value;
+    const price = document.getElementById('price').value;
+
+    fetch('/update-asset', {
+      method: 'POST',
+      body: JSON.stringify({id:id, name: name, description: description, price: price }),
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    }).then(response => {
+      if (response.ok) {
+        // Обновить интерфейс после успешного добавления
+          location.reload();
+
+      }
+    }).catch(error => {
+      console.error('Error adding asset:', error);
+    });
+  });
+
+</script>
+{% endblock %}

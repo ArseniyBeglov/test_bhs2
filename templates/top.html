@@ -1,0 +1,11 @@
+{% extends "base.html" %} {% block title %}Top{% endblock %} {% block content
+%}
+<h1 align="center">Top 5 assets ordering by price</h1>
+<ul class="list-group list-group-flush" id="assets">
+  {% for asset in assets %}
+  <li class="list-group-item">
+    {{ asset.id,  asset.name,  asset.description, asset.price }}
+  </li>
+  {% endfor %}
+</ul>
+{% endblock %}
