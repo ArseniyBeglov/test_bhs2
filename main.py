@@ -86,7 +86,7 @@ def login():
     if user:
         if sha256_crypt.verify(password, user.hased_password):
             access_token = create_access_token(identity=user)
-            return jsonify(message='Login Successful', access_token=access_token), 200
+            return jsonify(access_token), 200
         else:
             return jsonify('not correct username or password'), 401
     else:
@@ -127,7 +127,7 @@ def sing_up():
 @app.route('/', methods=['GET'])
 @jwt_required()
 def index():
-    return jsonify(message="Hello Flask!")
+    return jsonify(message="Hello Flask!"), 200
 
 
 top_assets_cache = {}
@@ -219,7 +219,7 @@ def delete_asset(asset_id):
         db.session.delete(asset)
         db.session.commit()
         update_top_assets_cache(current_user.id)
-        return jsonify(message='asset deleted successfully'), 201
+        return jsonify(message='asset deleted successfully'), 200
     else:
         return jsonify(message='asset not deleted '), 401
 
