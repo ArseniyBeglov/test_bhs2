@@ -163,6 +163,7 @@ def update_user():
         db.session.commit()
         return jsonify(message='user updated successfully'), 201
 
+
 @app.route('/asset/by-user', methods=['GET'])
 @jwt_required()
 def home():
@@ -238,7 +239,6 @@ def update_asset(asset_id):
         asset.price = price
         db.session.commit()
         return jsonify(message='asset updated successfully'), 201
-
 
 
 @app.route('/asset/buy/<int:asset_id>', methods=['PUT'])
