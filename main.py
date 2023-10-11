@@ -1,16 +1,21 @@
+import datetime
+from datetime import timedelta
+
 from flask import Flask, jsonify, request, flash, session, redirect
 from flask_sqlalchemy import SQLAlchemy
 from flask_swagger_ui import get_swaggerui_blueprint
 from passlib.hash import sha256_crypt
-from flask_jwt_extended import JWTManager, jwt_required, create_access_token, get_jwt_identity, current_user
+from flask_jwt_extended import JWTManager, jwt_required, create_access_token, get_jwt_identity, current_user, get_jwt
 
 SWAGGER_URL = '/api/docs'
 API_URL = '/static/swagger.json'
 
+ACCESS_EXPIRES = timedelta(hours=1)
 db = SQLAlchemy()
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'sdfcdfcdvcdfvgbtredcvgtr345rd'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://arsenijbeglov:iamroot@localhost:5432/bhs_db'
+app.config["JWT_ACCESS_TOKEN_EXPIRES"] = ACCESS_EXPIRES
 jwt = JWTManager(app)
 
 swaggerui_blueprint = get_swaggerui_blueprint(
@@ -62,6 +67,12 @@ class User(db.Model):
         self.hased_password = hased_password
 
 
+class TokenBlocklist(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    jti = db.Column(db.String(36), nullable=False, index=True)
+    created_at = db.Column(db.DateTime, nullable=False)
+
+
 with app.app_context():
     db.create_all()
 
@@ -75,6 +86,14 @@ def user_identity_lookup(user):
 def user_lookup_callback(_jwt_header, jwt_data):
     identity = jwt_data["sub"]
     return User.query.filter_by(id=identity).one_or_none()
+
+
+@jwt.token_in_blocklist_loader
+def check_if_token_revoked(jwt_header, jwt_payload: dict) -> bool:
+    jti = jwt_payload["jti"]
+    token = db.session.query(TokenBlocklist.id).filter_by(jti=jti).scalar()
+
+    return token is not None
 
 
 @app.route('/login', methods=['POST'])
@@ -94,8 +113,13 @@ def login():
 
 
 @app.route('/logout', methods=['DELETE'])
+@jwt_required()
 def logout():
-    return redirect('/')
+    jti = get_jwt()["jti"]
+    now = datetime.datetime.now(datetime.timezone.utc)
+    db.session.add(TokenBlocklist(jti=jti, created_at=now))
+    db.session.commit()
+    return jsonify(msg="JWT revoked"),200
 
 
 @app.route('/sign-up', methods=['POST'])
